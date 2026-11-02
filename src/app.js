@@ -15,7 +15,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
 
-app.set('trust proxy', 1);
+const css = `<style>h1{text-align:center;color:#008B8B} body{font-family:sans-serif;margin:2rem;background:#FFE4E1} button{padding:6px 12px;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer} form[action$="/delete"] button{background:#dc2626}</style>`;app.set('trust proxy', 1);
 
 // 1. oidc konfiguracija i middleware
 const oidcConfig = {
@@ -69,7 +69,6 @@ createTable();
 
 
 // rute
-
 app.get('/', async (req, res) => {
   try {
     const totalResult = await pool.query('SELECT COUNT(*) FROM passes');
@@ -81,6 +80,7 @@ app.get('/', async (req, res) => {
     const isLogged = req.oidc.isAuthenticated();
 
     res.send(`
+      ${css}
       <h1>Digitalne Propusnice - Pocetna</h1>
       <p>Ukupno propusnica u bazi: ${totalPasses}</p>
       <p>Broj aktivnih propusnica: ${activePasses}</p>
@@ -101,9 +101,8 @@ app.get('/dashboard', requiresAuth(), async (req, res) => {
   try {
     const passes = await pool.query('SELECT * FROM passes ORDER BY issued_at DESC');
     
-    let html = `<h1>Upravljanje propusnicama</h1><a href="/">Natrag na početnu</a><br><br>`;
-    html += `<table border="1"><tr><th>ID</th><th>Ime</th><th>Dokument</th><th>Izdana</th><th>Status</th><th>Akcija</th></tr>`;
-    
+    let html = `${css}<h1>Upravljanje propusnicama</h1><a href="/">Natrag na početnu</a><br><br>`;
+    html += `<table border="1"><tr><th>ID</th><th>Ime</th><th>Dokument</th><th>Izdana</th><th>Status</th><th>QR</th><th>Akcija</th></tr>`;    
     passes.rows.forEach(p => {
       html += `<tr>
         <td>${esc(p.id)}</td>
@@ -147,6 +146,7 @@ app.get('/info/:id', async (req, res) => {
 
     const p = rezultat.rows[0];
     res.send(`
+      ${css}
       <h1>Propusnica</h1>
       <p>Status: <b>${esc(p.status)}</b></p>
       <p>Ime i prezime: ${esc(p.name)}</p>
